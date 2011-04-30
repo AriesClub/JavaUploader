@@ -24,13 +24,15 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.FilenameUtils;
 
+import mo.com.vandagroup.javauploader.FileProperties;;
+
 /**
  * Servlet implementation class FileUploader
  */
 public class FileUploader extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private final int SIZE_THRESHOLD = DiskFileItemFactory.DEFAULT_SIZE_THRESHOLD;
-	private final File TEMP_DIR = new File("C:\\tmp");
+	private final File TEMP_DIR = new File(System.getProperty("java.io.tmpdir"));
 	private File uploadDir;
 	private String uploadUrl;
 	private File thumbnailsDir;
@@ -166,7 +168,7 @@ public class FileUploader extends HttpServlet {
 				}
 			}
 		};
-		upload.setProgressListener(progressListener);
+		//upload.setProgressListener(progressListener);
 		try {
 			List<?> items = upload.parseRequest(request);
 			Iterator<?> iter = items.iterator();
