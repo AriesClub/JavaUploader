@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
+  <display-name>JavaUploader</display-name>
+  	<servlet>
+		<display-name>FileUploader</display-name>
+		<servlet-name>FileUploader</servlet-name>
+		<servlet-class>mo.com.vandagroup.javauploader.FileUploader</servlet-class>
+		<init-param>
+			<param-name>upload_dir</param-name>
+			<param-value>/files/</param-value>
+		</init-param>
+		<init-param>
+			<param-name>upload_url</param-name>
+			<param-value>../files/</param-value>
+		</init-param>
+		<init-param>
+			<param-name>thumbnails_dir</param-name>
+			<param-value>/thumbnails/</param-value>
+		</init-param>
+		<init-param>
+			<param-name>thumbnails_url</param-name>
+			<param-value>../thumbnails/</param-value>
+		</init-param>
+	</servlet>
+  	<servlet-mapping>
+		<servlet-name>FileUploader</servlet-name>
+		<url-pattern>/FileUploader</url-pattern>
+	</servlet-mapping>
+  <welcome-file-list>
+    <welcome-file>index.html</welcome-file>
+    <welcome-file>index.htm</welcome-file>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+	<error-page>
+		<error-code>500</error-code>
+		<location>/500.jsp</location>
+	</error-page>
+	<error-page>
+		<error-code>404</error-code>
+		<location>/404.html</location>
+	</error-page>
+</web-app>
