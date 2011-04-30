@@ -17,5 +17,7 @@
 </head>
 <body>
 <%=exceptionMessage %>
+<br/>
+<%=servletException %>
 </body>
 </html>

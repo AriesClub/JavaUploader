@@ -19,18 +19,19 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.ProgressListener;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-
-import mo.com.vandagroup.javauploader.FileProperties;;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Servlet implementation class FileUploader
  */
 public class FileUploader extends HttpServlet {
 	private static final long serialVersionUID = 1L;
+	private static final Log LOG = LogFactory.getLog(FileUploader.class);
 	private final int SIZE_THRESHOLD = DiskFileItemFactory.DEFAULT_SIZE_THRESHOLD;
 	private final File TEMP_DIR = new File(System.getProperty("java.io.tmpdir"));
 	private File uploadDir;
@@ -70,11 +71,9 @@ public class FileUploader extends HttpServlet {
 					+ " is not a directory");
 		this.thumbnailsUrl = this.getInitParameter("thumbnails_url");
 
-		
-		this.getServletContext().log(
-				"UPLOAD_DIR:\t" + this.uploadDir.getAbsolutePath());
-		this.getServletContext().log(
-				"THUMBNAIL_DIR:\t" + this.thumbnailsDir.getAbsolutePath());
+		LOG.debug("TEMP_DIR:\t" + this.TEMP_DIR.getAbsolutePath());
+		LOG.debug("UPLOAD_DIR:\t" + this.uploadDir.getAbsolutePath());
+		LOG.debug("THUMBNAIL_DIR:\t" + this.thumbnailsDir.getAbsolutePath());
 	}
 
 	/**
@@ -155,20 +154,20 @@ public class FileUploader extends HttpServlet {
 		ServletFileUpload upload = new ServletFileUpload(factory);
 
 		// Create a progress listener
-		ProgressListener progressListener = new ProgressListener() {
-			@Override
-			public void update(long pBytesRead, long pContentLength, int pItems) {
-				System.out.printf("We are currently reading item %s.",pItems);
-				if (pContentLength == -1) {
-					System.out.println("So far, " + pBytesRead
-							+ " bytes have been read.");
-				} else {
-					System.out.println("So far, " + pBytesRead + " of "
-							+ pContentLength + " bytes have been read.");
-				}
-			}
-		};
-		//upload.setProgressListener(progressListener);
+//		ProgressListener progressListener = new ProgressListener() {
+//			@Override
+//			public void update(long pBytesRead, long pContentLength, int pItems) {
+//				System.out.printf("We are currently reading item %s.",pItems);
+//				if (pContentLength == -1) {
+//					System.out.println("So far, " + pBytesRead
+//							+ " bytes have been read.");
+//				} else {
+//					System.out.println("So far, " + pBytesRead + " of "
+//							+ pContentLength + " bytes have been read.");
+//				}
+//			}
+//		};
+//		upload.setProgressListener(progressListener);
 		try {
 			List<?> items = upload.parseRequest(request);
 			Iterator<?> iter = items.iterator();
@@ -183,7 +182,9 @@ public class FileUploader extends HttpServlet {
 					if (fileName != null && !"".equals(fileName)) {
 						fileName = FilenameUtils.getName(fileName);
 						File uploadFile = new File(this.uploadDir, fileName);
+						
 						item.write(uploadFile);
+						FileUtils.copyFileToDirectory(uploadFile, thumbnailsDir);
 					}
 					response.getWriter().printf(
 							new FileProperties(fileName, item.getSize(),

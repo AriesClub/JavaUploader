@@ -81,5 +81,10 @@
     	<type>jar</type>
     	<scope>provided</scope>
     </dependency>
+    <dependency>
+    	<groupId>org.mod4j.org.apache.commons</groupId>
+    	<artifactId>logging</artifactId>
+    	<version>1.0.4</version>
+    </dependency>
   </dependencies>
 </project>
