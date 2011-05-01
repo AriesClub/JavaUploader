@@ -1,8 +1,5 @@
 package mo.com.vandagroup.javauploader;
 
-import java.awt.AlphaComposite;
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileOutputStream;
@@ -12,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.imageio.ImageIO;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -38,6 +34,7 @@ public class FileUploader extends HttpServlet {
 	private static final Log LOG = LogFactory.getLog(FileUploader.class);
 	private final int SIZE_THRESHOLD = DiskFileItemFactory.DEFAULT_SIZE_THRESHOLD;
 	private final File TEMP_DIR = new File(System.getProperty("java.io.tmpdir"));
+	private final int MAX_THUMBNAILS_SIZE = 50;
 	private File uploadDir;
 	private String uploadUrl;
 	private File thumbnailsDir;
@@ -74,7 +71,7 @@ public class FileUploader extends HttpServlet {
 					+ " is not a directory");
 		this.thumbnailsUrl = this.getInitParameter("thumbnails_url");
 
-		LOG.info("TEMP_DIR:\t" + this.TEMP_DIR.getAbsolutePath());
+		LOG.info("TEMP_DIR:\t\t" + this.TEMP_DIR.getAbsolutePath());
 		LOG.info("UPLOAD_DIR:\t" + this.uploadDir.getAbsolutePath());
 		LOG.info("THUMBNAIL_DIR:\t" + this.thumbnailsDir.getAbsolutePath());
 	}
@@ -149,70 +146,84 @@ public class FileUploader extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
-		boolean isMultipart = ServletFileUpload.isMultipartContent(request);
-		if (!isMultipart) {
-			this.doPost2(request, response);
-			response.getWriter().close();
-			return;
-		}
 		response.setHeader("Content-type", "application/json");
-		// Create a factory for disk-bask file items
-		FileItemFactory factory = new DiskFileItemFactory(this.SIZE_THRESHOLD,
-				this.TEMP_DIR);
 
-		// Create a new file upload handler
-		ServletFileUpload upload = new ServletFileUpload(factory);
+		boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+		String fileName = null;
+		String contentType = null;
+		File uploadFile = null;
+		FileProperties pf = null;
+		
+		if (!isMultipart) {
+			fileName = request.getHeader("X-File-Name");
+			long fileSize = Long.valueOf(request.getHeader("X-File-Size"));
+			contentType = request.getHeader("X-File-Type");
 
-		// Create a progress listener
-		// ProgressListener progressListener = new ProgressListener() {
-		// @Override
-		// public void update(long pBytesRead, long pContentLength, int pItems)
-		// {
-		// System.out.printf("We are currently reading item %s.",pItems);
-		// if (pContentLength == -1) {
-		// System.out.println("So far, " + pBytesRead
-		// + " bytes have been read.");
-		// } else {
-		// System.out.println("So far, " + pBytesRead + " of "
-		// + pContentLength + " bytes have been read.");
-		// }
-		// }
-		// };
-		// upload.setProgressListener(progressListener);
-		try {
-			List<?> items = upload.parseRequest(request);
-			Iterator<?> iter = items.iterator();
-			while (iter.hasNext()) {
-				FileItem item = (FileItem) iter.next();
-
-				if (item.isFormField()) {
-					// Process a regular form field
-				} else {
-					// Process a file upload
-					String fileName = item.getName();
-					if (fileName != null && !"".equals(fileName)) {
-						fileName = FilenameUtils.getName(fileName);
-						File uploadFile = new File(this.uploadDir, fileName);
-
-						item.write(uploadFile);
-
-						// FileUtils.copyFileToDirectory(uploadFile,
-						// this.thumbnailsDir);
-						this.makeThumbnail(uploadFile, this.thumbnailsDir,
-								item.getContentType(), 50);
-					}
-					response.getWriter().printf(
-							new FileProperties(fileName, item.getSize(),
-									this.uploadUrl + fileName,
-									this.thumbnailsUrl + fileName).toString());
-				}
+			uploadFile = new File(this.uploadDir, fileName);
+			OutputStream os = new FileOutputStream(uploadFile);
+			int br;
+			byte bytes[] = new byte[1024];
+			while ((br = request.getInputStream().read(bytes)) > 0) {
+				os.write(bytes, 0, br);
 			}
-		} catch (FileUploadException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			response.getWriter().close();
+			os.close();
+			request.getInputStream().close();
+			pf = new FileProperties(fileName, fileSize, uploadUrl + fileName,
+					thumbnailsUrl + fileName);
+
+		} else {
+
+			// Create a factory for disk-bask file items
+			FileItemFactory factory = new DiskFileItemFactory(
+					this.SIZE_THRESHOLD, this.TEMP_DIR);
+
+			// Create a new file upload handler
+			ServletFileUpload upload = new ServletFileUpload(factory);
+
+			try {
+				List<?> items = upload.parseRequest(request);
+				Iterator<?> iter = items.iterator();
+				while (iter.hasNext()) {
+					FileItem item = (FileItem) iter.next();
+
+					if (item.isFormField()) {
+						// Process a regular form field
+					} else {
+						// Process a file upload
+						fileName = item.getName();
+						contentType = item.getContentType();
+						if (fileName != null && !"".equals(fileName)) {
+							fileName = FilenameUtils.getName(fileName);
+							uploadFile = new File(this.uploadDir, fileName);
+
+							item.write(uploadFile);
+						}
+						pf = new FileProperties(fileName, item.getSize(),
+								this.uploadUrl + fileName, this.thumbnailsUrl
+										+ fileName);
+
+					}
+					// Only 1 file
+					break;
+				}
+			} catch (FileUploadException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		response.getWriter().print(pf.toString());
+		response.getWriter().close();
+		
+		if (contentType.equals("image/png") || contentType.equals("image/jpeg")
+				|| contentType.equals("image/gif")) {
+			// Generate thumbnails image
+			ImageScaling.makeThumbnail(uploadFile, this.thumbnailsDir,
+					contentType, this.MAX_THUMBNAILS_SIZE);
+		} else {
+			FileUtils.copyFile(
+					new File(this.thumbnailsDir, "attach_image.png"), new File(
+							this.thumbnailsDir, fileName));
 		}
 	}
 
@@ -232,66 +243,5 @@ public class FileUploader extends HttpServlet {
 			thumbnailFile.delete();
 		}
 		response.getWriter().printf("true").close();
-	}
-
-	private void doPost2(HttpServletRequest request,
-			HttpServletResponse response) throws ServletException, IOException {
-		response.setHeader("Content-type", "application/json");
-		String fileName = request.getHeader("X-File-Name");
-		long fileSize = Long.valueOf(request.getHeader("X-File-Size"));
-		// String contentType = request.getHeader("X-File-Type");
-
-		File uploadFile = new File(this.uploadDir, fileName);
-		OutputStream os = new FileOutputStream(uploadFile);
-		int br;
-		byte bytes[] = new byte[1024];
-		while ((br = request.getInputStream().read(bytes)) > 0) {
-			os.write(bytes, 0, br);
-		}
-		os.close();
-		request.getInputStream().close();
-		FileProperties pf = new FileProperties(fileName, fileSize, uploadUrl
-				+ fileName, thumbnailsUrl + fileName);
-		response.getWriter().print(pf.toString());
-
-	}
-
-	private void makeThumbnail(File sourceFile, File repository,
-			String contentType, int size) throws IOException {
-		if (!repository.isDirectory()) {
-			return;
-		}
-
-		String imageOutput;
-		int height;
-		int width;
-		if ("image/png".equals(contentType)) {
-			imageOutput = "png";
-		} else if ("image/jpeg".equals(contentType)) {
-			imageOutput = "jpg";
-		} else {
-			FileUtils.copyFile(
-					new File(this.thumbnailsDir, "attach_image.png"), new File(
-							this.thumbnailsDir, sourceFile.getName()));
-			return;
-		}
-		BufferedImage bfImage = ImageIO.read(sourceFile);
-		if (bfImage.getHeight() < bfImage.getWidth()) {
-			width = size;
-			height = width * bfImage.getHeight() / bfImage.getWidth();
-		} else {
-			height = size;
-			width = height * bfImage.getWidth() / bfImage.getHeight();
-		}
-
-		BufferedImage scaledBI = new BufferedImage(width, height,
-				BufferedImage.SCALE_SMOOTH);
-		Graphics2D g = scaledBI.createGraphics();
-		g.setComposite(AlphaComposite.Src);
-		g.drawImage(bfImage, 0, 0, width, height, null);
-		g.dispose();
-
-		ImageIO.write(scaledBI, imageOutput,
-				new File(repository, sourceFile.getName()));
 	}
 }

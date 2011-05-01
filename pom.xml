@@ -23,8 +23,6 @@
   			<configuration>
   				<server>Test Server</server>
   				<url>http://192.168.1.35:8080/manager/html</url>
-  				<username>tomcat</username>
-  				<password>tomcat</password>
   			</configuration>
   		</plugin>
   		<plugin>
@@ -82,9 +80,15 @@
     	<scope>provided</scope>
     </dependency>
     <dependency>
-    	<groupId>org.mod4j.org.apache.commons</groupId>
-    	<artifactId>logging</artifactId>
-    	<version>1.0.4</version>
+    	<groupId>commons-logging</groupId>
+    	<artifactId>commons-logging</artifactId>
+    	<version>1.1.1</version>
+    	<scope>compile</scope>
+    </dependency>
+    <dependency>
+    	<groupId>com.mortennobel</groupId>
+    	<artifactId>java-image-scaling</artifactId>
+    	<version>0.8.5</version>
     </dependency>
   </dependencies>
 </project>
