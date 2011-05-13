@@ -75,6 +75,18 @@
     	<artifactId>java-image-scaling</artifactId>
     	<version>0.8.5</version>
     </dependency>
+    <dependency>
+    	<groupId>com.google.code.gson</groupId>
+    	<artifactId>gson</artifactId>
+    	<version>1.7.1</version>
+    </dependency>
   </dependencies>
+  <repositories>
+  	<repository>
+  		<id>repo2</id>
+  		<url>http://repo2.maven.org/maven2</url>
+  		<releases><enabled>true</enabled></releases>
+  	</repository>
+  </repositories>
 </project>
 

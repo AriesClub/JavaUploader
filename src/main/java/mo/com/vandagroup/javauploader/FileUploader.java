@@ -26,6 +26,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.google.gson.Gson;
+
 /**
  * Servlet implementation class FileUploader
  */
@@ -113,12 +115,11 @@ public class FileUploader extends HttpServlet {
 
 			};
 			for (File f : this.uploadDir.listFiles(select)) {
-				fps.add(new FileProperties(f.getName(), f.length(),
-						this.uploadUrl + f.getName(), this.thumbnailsUrl
-								+ "attach_image.png"));
+				fps.add(new FileProperties.Builder(f.getName(), f.length(), this.uploadUrl+f.getName())
+						.thumbnail(this.thumbnailsUrl+"attach_image.png")
+						.build());
 			}
-
-			response.getWriter().printf(fps.toString());
+			response.getWriter().printf(new Gson().toJson(fps));
 			// end example-1
 		} else {
 			File findFile = new File(this.uploadDir,
@@ -126,10 +127,9 @@ public class FileUploader extends HttpServlet {
 
 			if (findFile.isFile()) {
 				// file parameter is existing, return that file's properties
-
-				fps.add(new FileProperties(findFile.getName(), 123,
-						this.uploadUrl + findFile.getName(), this.thumbnailsUrl
-								+ findFile.getName()));
+				fps.add(new FileProperties.Builder(findFile.getName(), findFile.length(), this.uploadUrl+findFile.getName())
+						.thumbnail(this.thumbnailsUrl+findFile.getName())
+						.build());
 				response.getWriter().printf(fps.toString());
 
 			} else {
@@ -168,8 +168,8 @@ public class FileUploader extends HttpServlet {
 			}
 			os.close();
 			request.getInputStream().close();
-			pf = new FileProperties(fileName, fileSize, uploadUrl + fileName,
-					thumbnailsUrl + fileName);
+			pf = new FileProperties.Builder(fileName, fileSize, uploadUrl + fileName).thumbnail(
+					thumbnailsUrl + fileName).build();
 
 		} else {
 
@@ -198,9 +198,9 @@ public class FileUploader extends HttpServlet {
 
 							item.write(uploadFile);
 						}
-						pf = new FileProperties(fileName, item.getSize(),
-								this.uploadUrl + fileName, this.thumbnailsUrl
-										+ fileName);
+						pf = new FileProperties.Builder(fileName, item.getSize(),
+								this.uploadUrl + fileName).thumbnail(this.thumbnailsUrl
+										+ fileName).build();
 
 					}
 					// Only 1 file
@@ -212,7 +212,7 @@ public class FileUploader extends HttpServlet {
 				e.printStackTrace();
 			}
 		}
-		response.getWriter().print(pf.toString());
+		response.getWriter().print(new Gson().toJson(pf));
 		response.getWriter().close();
 		
 		if (contentType.equals("image/png") || contentType.equals("image/jpeg")
