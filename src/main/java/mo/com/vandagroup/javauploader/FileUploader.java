@@ -115,7 +115,7 @@ public class FileUploader extends HttpServlet {
 
 			};
 			for (File f : this.uploadDir.listFiles(select)) {
-				fps.add(new FileProperties.Builder(f.getName(), f.length(), this.uploadUrl+f.getName())
+				fps.add(new FilePropertiesBuilder(f.getName(), f.length(), this.uploadUrl+f.getName())
 						.thumbnail(this.thumbnailsUrl+"attach_image.png")
 						.build());
 			}
@@ -127,7 +127,7 @@ public class FileUploader extends HttpServlet {
 
 			if (findFile.isFile()) {
 				// file parameter is existing, return that file's properties
-				fps.add(new FileProperties.Builder(findFile.getName(), findFile.length(), this.uploadUrl+findFile.getName())
+				fps.add(new FilePropertiesBuilder(findFile.getName(), findFile.length(), this.uploadUrl+findFile.getName())
 						.thumbnail(this.thumbnailsUrl+findFile.getName())
 						.build());
 				response.getWriter().printf(fps.toString());
@@ -168,7 +168,7 @@ public class FileUploader extends HttpServlet {
 			}
 			os.close();
 			request.getInputStream().close();
-			pf = new FileProperties.Builder(fileName, fileSize, uploadUrl + fileName).thumbnail(
+			pf = new FilePropertiesBuilder(fileName, fileSize, uploadUrl + fileName).thumbnail(
 					thumbnailsUrl + fileName).build();
 
 		} else {
@@ -198,7 +198,7 @@ public class FileUploader extends HttpServlet {
 
 							item.write(uploadFile);
 						}
-						pf = new FileProperties.Builder(fileName, item.getSize(),
+						pf = new FilePropertiesBuilder(fileName, item.getSize(),
 								this.uploadUrl + fileName).thumbnail(this.thumbnailsUrl
 										+ fileName).build();
 

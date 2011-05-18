@@ -6,22 +6,46 @@ public class FileProperties {
 	private String name;
 	private long size;
 	private String url;
-	private String thumbnail;
+	String thumbnail;
 	
-	private FileProperties(Builder build){
-		this.name = build.name;
-		this.size = build.size;
-		this.url = build.url;
-		this.thumbnail = build.thumbnail;
-	}
-	
-	FileProperties(String name, long size, String url, String thumbnail){
+	FileProperties(String name, long size, String url){
 		this.name = name;
 		this.size = size;
 		this.url = url;
-		this.thumbnail = thumbnail;
 	}
 
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public long getSize() {
+		return size;
+	}
+
+	public void setSize(long size) {
+		this.size = size;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+	
+
+	public String getThumbnail() {
+		return thumbnail;
+	}
+
+	public void setThumbnail(String thumbnail) {
+		this.thumbnail = thumbnail;
+	}
 
 	public String toString() {
 		String item = "{";
@@ -32,23 +56,5 @@ public class FileProperties {
 		item = item.concat("}");
 		return item.replaceAll("/", Matcher.quoteReplacement("\\/"));
 
-	}
-	static class Builder{
-		private String name;
-		private long size;
-		private String url;
-		private String thumbnail;
-		Builder(String name, long size, String url){
-			this.name = name;
-			this.size = size;
-			this.url = url;
-		}
-		public Builder thumbnail(String thumbnail){
-			this.thumbnail = thumbnail;
-			return this;
-		}
-		public FileProperties build(){
-			return new FileProperties(this);
-		}
 	}
 }
